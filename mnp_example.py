@@ -50,18 +50,19 @@ current_case = 'SINGLE GRAPH'
 # 	mnp.set_parameter_slider(prm_MIN=-10.,prm_MAX=23.,prm_VAL=0.,prm_res=0.01,prm_name='r')
 #
 # 
-# git: https://github.com/glebkarmi/Manipulator/
-# email: gleb.phd@gmail.com; Write in the Subject: "manipulator.py"
+# git: 
+# email: gleb.phd@gmail.com; Write in the Subject: "my_manipulator.py"
 
 from matplotlib import use
 use('TkAgg')
 # from matplotlib.pyplot import plot, show, xlabel, ylabel, title, subplots, \
 # 	draw, figure, contour, clabel, scatter
 import tkinter as Tk	
-import manipulator as mnp
+from manipulator import CManipulator 
+mnp = CManipulator()
 from numpy import arange, sqrt, copy as np_copy, fmod, linspace
 grid_status = True
-def parabola(ax):
+def parabola(fig):
 	global grid_status
 	a = mnp.param['a']['scale'].get()
 	b = mnp.param['b']['scale'].get()
@@ -69,6 +70,7 @@ def parabola(ax):
 	LIM = 10.
 	X = arange(-LIM, LIM, 20/1000)
 	Y =  a*X*X+b*X+c
+	ax = mnp.get_manip_axis()
 	ax.plot([-LIM,LIM],[0,0],'-.k')
 	ax.plot([0,0],[min(Y),max(Y)],'-.k')
 	ax.plot(X, Y)
@@ -161,40 +163,98 @@ def LogisticMapBifurcation(dummy):
 
 	return [r_sweep, Xn_list]
 
-##################################################
-###                 #  MAIN #                  ###
-##################################################
+def create_dropdown_lst(mnp):
+	global curr_case
+	frame = mnp.get_manip_frame()
+	# Create a Tkinter variable
+	curr_case = Tk.StringVar(mnp.root)
 
-if current_case is 'SELF PLOTTED GRAPH':
-	mnp.SELF_PLOT_FUNCTION = True
-	mnp.root.title("examples for manipulator Ver. %s"%mnp.__version__)
-	mnp.m_func = parabola		
-	mnp.set_parameter_slider(prm_MIN=5.,prm_MAX=-5.,prm_VAL=1,prm_res=0.001,prm_name='a')
-	mnp.set_parameter_slider(prm_MIN=20.,prm_MAX=-20.,prm_VAL=0.0,prm_res=0.001,prm_name='b')
-	mnp.set_parameter_slider(prm_MIN=30.,prm_MAX=-30.,prm_VAL=0.0,prm_res=0.001,prm_name='c',tickinterval=10)
+	# Dictionary with options
+	examples_lst = { 'SELF PLOTTED GRAPH','MULTIPLE GRAPHS','SINGLE GRAPH'} # 'MULTIPLE AXES'
+	curr_case.set(current_case) # set the default option
 
-	mnp.root.bind("<space>", toggle_grid)
+	# popupMenu = Tk.OptionMenu(frame, curr_case, *examples_lst)
+	popupMenu = Tk.OptionMenu(mnp.root, curr_case, *examples_lst)
+	# Label(mainframe, text="Choose a dish").grid(row = 1, column = 1)
+	popupMenu.grid(row = 2, column =20)
+	# popupMenu.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 
-if current_case is 'MULTIPLE GRAPHS':
-	mnp.Xo = arange(0.0, 1.0, 0.001)
+	# link function to change dropdown
+	curr_case.trace('w', on_change_dropdown)
+
+def on_change_dropdown(*args):
+	global curr_case
+	print( curr_case.get() )
+	if curr_case.get() == 'MULTIPLE GRAPHS':
+		MULTIPLE_GRAPHS_init()
+	if curr_case.get() == 'SELF PLOTTED GRAPH':
+		SELF_PLOTTED_GRAPH_init()
+	if curr_case.get() == 'SINGLE GRAPH':
+		SINGLE_GRAPH_init()
+
+def MULTIPLE_GRAPHS_init():	
+	global mnp
+	current_case = 'MULTIPLE GRAPHS'
+	mnp.clear_mnp_params()
+	mnp.SELF_PLOT_FUNCTION = False; mnp.UPDATE_AFTER_RELEASE = False;
+	# del(mnp.grf_title)
 	mnp.grf_title = '$N_{th}$ iteration of Bernoulli map; '
+	mnp.Xo = arange(0.0, 1.0, 0.001)
 	mnp.X_label = '$X_{ N}$'
 	mnp.Y_label = '$X_{N+1}$'
 	mnp.grf_stile =['-b',':r','-']
-	mnp.m_func = [bernoulli_N_iteration,same_val]
 	mnp.set_parameter_slider(prm_MIN=1,prm_MAX=10,prm_VAL=2,prm_res=1,prm_name='iter')
 	mnp.set_parameter_slider(prm_MIN=-10.,prm_MAX=23.,prm_VAL=0.,prm_res=0.01,prm_name='r')
+	mnp.m_func = [bernoulli_N_iteration,same_val]
 
-if current_case is 'SINGLE GRAPH':
+	print('in MULTIPLE_GRAPHS_init')
+
+
+def SELF_PLOTTED_GRAPH_init():
+	current_case = 'SELF PLOTTED GRAPH'
+	mnp.clear_mnp_params()
+	mnp.SELF_PLOT_FUNCTION = True; mnp.UPDATE_AFTER_RELEASE = False;
+	mnp.grf_title = None
+	mnp.root.title("examples for manipulator Ver. %s"%mnp.__version__)
+	mnp.set_parameter_slider(prm_MIN=5.,prm_MAX=-5.,prm_VAL=1,prm_res=0.001,prm_name='a')
+	mnp.set_parameter_slider(prm_MIN=20.,prm_MAX=-20.,prm_VAL=0.0,prm_res=0.001,prm_name='b')
+	mnp.set_parameter_slider(prm_MIN=30.,prm_MAX=-30.,prm_VAL=0.0,prm_res=0.001,prm_name='c',tickinterval=10)
+	mnp.m_func = parabola		
+
+	mnp.root.bind("<space>", toggle_grid)
+
+	print('in SELF_PLOTTED_GRAPH_init')
+
+def SINGLE_GRAPH_init():
+	current_case = 'SINGLE GRAPH'
+	mnp.clear_mnp_params()
+
 	mnp.grf_title = 'Bifurcation diagram of Logistic map f(x)=rx(1-x); '
 	mnp.X_label = 'r'
 	mnp.Y_label = '$X_{N}$'
 	mnp.aliased=True
-	mnp.UPDATE_AFTER_RELEASE = True
+	mnp.SELF_PLOT_FUNCTION = False; mnp.UPDATE_AFTER_RELEASE = True; 
 	mnp.grf_stile =['b,'] # a one pixel plot
 	mnp.set_parameter_slider(prm_MIN=0.,prm_MAX=1.0,prm_VAL=0.33,prm_res=0.01,prm_name='Xo')
-	mnp.set_parameter_slider(prm_MIN=0.01,prm_MAX=4.,prm_VAL=2.8,prm_res=0.0001,prm_name='r_low')
-	mnp.set_parameter_slider(prm_MIN=3.0,prm_MAX=4.3,prm_VAL=3.8,prm_res=0.0001,prm_name='r_upp')
+	mnp.set_parameter_slider(prm_MIN=0.01,prm_MAX=4.,prm_VAL=2.9845,prm_res=0.0001,prm_name='r_low')
+	mnp.set_parameter_slider(prm_MIN=3.0,prm_MAX=4.3,prm_VAL=3.037,prm_res=0.0001,prm_name='r_upp')
 	mnp.m_func = LogisticMapBifurcation
+	# mnp.evaluate_now = True
+	print('in SINGLE_GRAPH_init')
+##################################################
+###                 # MAIN #                   ###
+##################################################
+mnp.root.title("examples for manipulator Ver. %s"%mnp.__version__)
+create_dropdown_lst(mnp)
+
+# on_change_dropdown()
+if current_case is 'SELF PLOTTED GRAPH':
+	SELF_PLOTTED_GRAPH_init()
+
+if current_case is 'MULTIPLE GRAPHS':
+	MULTIPLE_GRAPHS_init()
+
+if current_case is 'SINGLE GRAPH':
+	SINGLE_GRAPH_init()
 
 Tk.mainloop()
