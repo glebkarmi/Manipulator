@@ -1,6 +1,6 @@
 #################################################
 ###                Manipulator                ###
-###               by Gleb Karmi               ###
+###       by Gleb Karmi - MIT License         ###
 ##################################################
 from matplotlib import use
 use('TkAgg')
@@ -41,9 +41,6 @@ class CManipulator:
 	SELF_PLOT_FUNCTION = False
 	Xc,Yc = 0,0
 
-	# copy a matplotlib figure to clipboard as BMP on windows
-	# http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
-
 	def __init__(self):
 		self.evaluate_now=True
 		self.m_func = self.a_line 
@@ -55,7 +52,6 @@ class CManipulator:
 		# canvas = FigureCanvasTkAgg(fig, master=fr) # for pack geometry method 
 		self.canvas = FigureCanvasTkAgg(self.fig, master=CManipulator.root) # for grid geometry method
 		self.fig.canvas.mpl_connect('motion_notify_event', self.coursor_position_self)# after FigureCanvasTkAgg
-
 		#canvas.show()
 		self.canvas.draw()
 
@@ -66,7 +62,6 @@ class CManipulator:
 		self.toolbar.update()
 		self.update(self.canvas,self.fig)
 
-		# canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 		self.canvas.get_tk_widget().grid(row=3, column=10, columnspan=30, rowspan=20, sticky=Tk.E+Tk.W+Tk.S+Tk.N)
 		# root.bind("<space>", dummy_function)
 		CManipulator.root.bind("<Control-c>", self.copy2clipboard )
@@ -74,7 +69,6 @@ class CManipulator:
 	def clear_mnp_params(self):
 		self.evaluate_now=False 
 		#! Must turn the flag On before usage. With False value update() is not working !#
-
 		try: 	
 			for prm_name in self.param.keys():		
 				self.param[prm_name]['lbl']	   .destroy() #
@@ -87,6 +81,8 @@ class CManipulator:
 		self.param, self.prm_prev = {}, {}
 		self.prm_tot = 0		
 
+	# copy a matplotlib figure to clipboard as BMP on windows
+	# http://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard
 	def copy2clipboard(self,event, figure=None):
 		from io import BytesIO as StringIO
 		from time import sleep
@@ -107,7 +103,6 @@ class CManipulator:
 		# im = Image.frombuffer('RGBA', (w,h), buf)
 		# II = im.transpose(Image.FLIP_TOP_BOTTOM).convert("RGB")
 		# II.save(output, "BMP") # "JPEG")# 
-
 		im = Image.frombuffer('RGBA', (w,h), buf, 'raw', 'RGBA', 0, 1)
 		im.save(output, "BMP") # "JPEG")#
 
@@ -283,5 +278,6 @@ class CManipulator:
 # 
 ## TBDs ############################################################	
 # - self.evaluate_now True review
-# - self.prm_string += prm_name+'='+str(self.param[prm_name]['scale'].get())+';'
-#   is doubled 
+# - MIT Licence
+# - Status line: "Ctrl+C for copying figure; Space bar for toggle grid
+# - Settings window
